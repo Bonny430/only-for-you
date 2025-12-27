@@ -108,10 +108,11 @@
         .card-style {
             background-color: var(--card-bg);
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            padding: 50px 40px; border-radius: 24px; text-align: center; max-width: 340px; width: 85%;
+            padding: 40px 30px; border-radius: 24px; text-align: center; max-width: 340px; width: 88%;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid #f0e6e6;
+            max-height: 85vh; overflow-y: auto;
         }
-        .message-text { color: #555; font-size: 16px; line-height: 2.2; font-family: "Noto Serif TC", serif; }
+        .message-text { color: #555; font-size: 15px; line-height: 1.8; font-family: "Noto Serif TC", serif; text-align: left;}
         .highlight { color: #d87a7a; font-weight: bold; border-bottom: 2px solid #fad0c4; }
 
         /* Confetti */
@@ -144,21 +145,20 @@
     <div id="stage-reveal" class="container">
         <div style="font-size: 18px; color: #888; letter-spacing: 2px;">✨ CONGRATS ✨</div>
         <div id="finalPrizeText" class="reveal-content">...</div>
-        <button id="goToCardBtn" class="main-btn">💌 收下卡片</button>
+        <button id="goToCardBtn" class="main-btn">💌 讀一封信</button>
     </div>
 
     <!-- Stage 4 -->
     <div id="stage-card" class="container">
         <div class="card-style">
-            <div id="card-title" style="font-size: 14px; color: var(--primary-color); letter-spacing: 3px; font-weight: bold; margin-bottom: 30px;">HAPPY BIRTHDAY</div>
+            <div id="card-title" style="font-size: 13px; color: var(--primary-color); letter-spacing: 4px; font-weight: bold; margin-bottom: 25px;">MEMORIES & WISHES</div>
             <div class="message-text">
-                <span id="card-opening" style="font-size: 20px; display:block; margin-bottom: 10px;">Dear 0107,</span>
+                <span id="card-opening" style="font-size: 18px; font-weight: bold; display:block; margin-bottom: 15px; color: #333;"></span>
                 <div id="card-body">
                     <!-- 這裡會填入卡片正文 -->
                 </div>
             </div>
-            <div id="card-signature" style="font-size: 13px; color: #aaa; margin-top: 35px;">
-                —— 永遠支持妳的朋友
+            <div id="card-signature" style="font-size: 14px; color: #888; margin-top: 30px; text-align: right; font-weight: bold;">
             </div>
         </div>
     </div>
@@ -166,84 +166,62 @@
     <script>
         /**
          * ==========================================
-         * ✨ 在這裡修改所有的文字內容 (像填表單一樣) ✨
+         * ✨ 所有的文字內容都在這裡設定 ✨
          * ==========================================
          */
         const APP_CONTENT = {
-            // 1. 密碼 (預設 0107)
             passcode: "0107",
 
-            // 2. 漂浮的短語 (第二關會隨機飛出來的文字)
             floatingTexts: [
                 "0107 生日快樂！", 
                 "願妳眼裡永遠有光", 
                 "今天的妳特別耀眼",
                 "要把煩惱都清空喔", 
-                "妳比自己想像的更棒", 
                 "謝謝妳的存在",
-                "累了記得休息", 
-                "一直都在妳身後", 
                 "要天天開心",
-                "閃閃發光的妳", 
                 "✨ Happy Birthday ✨"
             ],
             
-            // 3. 隨機抽中的獎品清單 (拆開禮物後隨機出現一個)
             prizes: [
                 "請喝一杯飲料券\n(口味任選)", 
                 "無條件聽妳抱怨券\n(隨時有效)",
                 "心情好轉券\n(負責逗妳笑)", 
                 "萬能許願券\n(妳說什麼就是什麼)",
-                "陪讀券\n(圖書館安靜陪伴)", 
                 "點心餵食券\n(隨機掉落零食)"
             ],
             
-            // 4. 卡片內容
-            cardTitle: "Happy Birthday",
-            cardOpening: "Dear 0107,",
-            cardBody: `願妳的快樂，不只今天，<br>
-                       而是未來的每一天。<br><br>
-                       很幸運能在國中這段路遇到妳，<br>
-                       成為彼此的<span class="highlight">好夥伴</span>。<br>
-                       未來也請多指教囉！`,
-            cardSignature: "—— 永遠支持妳的朋友"
+            // --- 這是您的信件內容 ---
+            cardOpening: "Dear 可愛數學小老師：",
+            cardBody: `這是我們相識後的第二個生日。回首這段日子，雖然我們曾一起走過一些雨天，也經歷過些許磕絆，但正是這些不完美，讓我更珍惜現在能以朋友身分陪在妳身邊的時刻。<br><br>
+                       謝謝妳一直以來的包容與陪伴，妳的善良與知性是我生命中很特別的存在。過去的歲月感謝有妳參與，未來的日子，也請讓我們繼續並肩前行，互相指教。<br><br>
+                       <span class="highlight">能遇見妳，是我這份人生考卷裡最幸運的答案。</span><br><br>
+                       祝妳 生日快樂，願妳每一天都充滿笑容`,
+            cardSignature: "林博程 敬上"
         };
 
         /**
-         * ==========================================
-         * 程式邏輯區 (除非要改功能，否則不需更動)
-         * ==========================================
+         * 程式執行邏輯
          */
-        
-        // 初始化文字
-        document.getElementById('card-title').innerText = APP_CONTENT.cardTitle;
         document.getElementById('card-opening').innerText = APP_CONTENT.cardOpening;
         document.getElementById('card-body').innerHTML = APP_CONTENT.cardBody;
         document.getElementById('card-signature').innerText = APP_CONTENT.cardSignature;
 
-        const CONFIG = {
-            clicksToOpen: 10,
-            typeSpeed: 40,
-            spawnRate: 600
-        };
-
-        // --- 滑鼠軌跡 ---
         const canvas = document.getElementById('canvas-trail');
         const ctx = canvas.getContext('2d');
         let particles = [];
-        const shapes = ['♥', '✨'];
         const colors = ['#ff9a9e', '#fad0c4', '#fbc2eb', '#ffffff'];
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
+        
         const createParticle = (x, y) => {
             particles.push({
-                x, y, text: shapes[Math.floor(Math.random() * shapes.length)],
-                color: colors[Math.floor(Math.random() * colors.length)],
+                x, y, text: '♥', color: colors[Math.floor(Math.random() * colors.length)],
                 size: Math.random() * 15 + 8, speedX: Math.random() * 2 - 1, speedY: Math.random() * 2 - 1, life: 1
             });
         }
         window.addEventListener('mousemove', e => createParticle(e.clientX, e.clientY));
         window.addEventListener('touchmove', e => createParticle(e.touches[0].clientX, e.touches[0].clientY));
+        
         function animateTrail() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.forEach((p, i) => {
@@ -257,7 +235,6 @@
         }
         animateTrail();
 
-        // --- 關卡邏輯 ---
         const passInput = document.getElementById('passInput');
         passInput.addEventListener('input', (e) => {
             if(e.target.value === APP_CONTENT.passcode) {
@@ -282,13 +259,7 @@
                     if (i < textContent.length) { el.innerHTML += textContent.charAt(i); i++; setTimeout(type, 40); }
                 }
                 type();
-
-                const heart = document.createElement('div');
-                heart.className = 'pop-heart'; heart.innerHTML = '❤️';
-                heart.style.left = `calc(${rx}% - 10px)`; heart.style.top = `calc(${ry}% + 30px)`;
-                stageText.appendChild(heart);
-
-                setTimeout(() => { el.remove(); heart.remove(); }, 6000);
+                setTimeout(() => el.remove(), 6000);
             }, 600);
 
             setTimeout(() => {
@@ -329,11 +300,9 @@
                 c.style.animation = `drop ${Math.random()*3+2}s forwards`;
                 document.body.appendChild(c);
             }
-            if(!document.getElementById('confetti-style')) {
-                let s = document.createElement('style'); s.id = 'confetti-style';
-                s.innerHTML = `@keyframes drop { to { transform: translateY(105vh) rotate(360deg); opacity: 0; } }`;
-                document.head.appendChild(s);
-            }
+            let s = document.createElement('style');
+            s.innerHTML = `@keyframes drop { to { transform: translateY(105vh) rotate(360deg); opacity: 0; } }`;
+            document.head.appendChild(s);
         }
     </script>
 </body>
