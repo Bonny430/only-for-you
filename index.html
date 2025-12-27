@@ -31,6 +31,20 @@
         /* === 全域特效 === */
         #canvas-trail { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
 
+        /* 音樂控制按鈕 */
+        #music-control {
+            position: fixed; top: 20px; right: 20px; width: 44px; height: 44px;
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; z-index: 200; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.5);
+            display: none; /* 初始隱藏，加載成功才顯示 */
+        }
+        #music-control.ready { display: flex; }
+        #music-control:hover { transform: scale(1.1); }
+        .music-icon { font-size: 22px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); }
+
         .container {
             position: absolute; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -41,13 +55,41 @@
         .container.active { opacity: 1; pointer-events: auto; z-index: 30; transform: scale(1); }
 
         /* === Stage 0: 密碼鎖 === */
-        #stage-lock { background: rgba(255, 255, 255, 0.95); z-index: 100; }
+        #stage-lock { background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(235,237,238,0.4) 100%); z-index: 100; }
+        .lock-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            padding: 50px 30px;
+            border-radius: 35px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            text-align: center;
+            max-width: 320px;
+            width: 85%;
+            animation: cardFloat 4s ease-in-out infinite;
+        }
+        @keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+        .lock-title { color: #888; font-size: 15px; letter-spacing: 5px; margin-bottom: 25px; font-weight: bold; }
+        
+        .pass-input-wrapper { position: relative; display: inline-block; }
         input[type="text"] {
-            font-size: 24px; padding: 10px; width: 150px; text-align: center;
-            border: none; border-bottom: 3px solid #ddd; outline: none; background: transparent;
-            letter-spacing: 5px; margin-bottom: 20px; color: var(--text-color); transition: 0.3s;
+            font-size: 32px; padding: 12px; width: 180px; text-align: center;
+            border: none; border-bottom: 3px solid #f0f0f0; outline: none; background: transparent;
+            letter-spacing: 10px; margin-bottom: 15px; color: #ff9a9e; transition: 0.3s;
+            font-weight: bold;
         }
         input[type="text"]:focus { border-bottom-color: var(--primary-color); }
+        input[type="text"]::placeholder { letter-spacing: 2px; font-size: 16px; color: #ddd; font-weight: normal; }
+
+        .error-shake { animation: shakeError 0.4s ease-in-out; }
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+        }
 
         /* === Stage 1: 浪漫氛圍 === */
         .float-msg {
@@ -64,26 +106,9 @@
             pointer-events: auto; z-index: 10;
             min-width: 140px; text-align: center;
         }
-
-        .float-msg::after {
-            content: '✨';
-            position: absolute;
-            top: -10px; right: -10px;
-            font-size: 16px;
-            filter: drop-shadow(0 0 5px var(--primary-color));
-        }
-
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 10px 25px var(--glow-color); }
-            50% { box-shadow: 0 15px 35px rgba(255, 154, 158, 0.5); }
-        }
-
-        @keyframes driftUpText {
-            0% { transform: translateY(0) scale(0.85); opacity: 0; }
-            15% { opacity: 1; transform: translateY(-30px) scale(1); }
-            85% { opacity: 1; }
-            100% { transform: translateY(-350px) scale(0.95); opacity: 0; }
-        }
+        .float-msg::after { content: '✨'; position: absolute; top: -10px; right: -10px; font-size: 16px; filter: drop-shadow(0 0 5px var(--primary-color)); }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 10px 25px var(--glow-color); } 50% { box-shadow: 0 15px 35px rgba(255, 154, 158, 0.5); } }
+        @keyframes driftUpText { 0% { transform: translateY(0) scale(0.85); opacity: 0; } 15% { opacity: 1; transform: translateY(-30px) scale(1); } 85% { opacity: 1; } 100% { transform: translateY(-350px) scale(0.95); opacity: 0; } }
 
         .main-btn {
             margin-top: 30px; padding: 12px 35px;
@@ -93,27 +118,22 @@
             box-shadow: 0 8px 20px rgba(255, 154, 158, 0.3);
             opacity: 0; transform: translateY(30px) scale(0.8);
             pointer-events: none;
-            z-index: 1; /* 初始較低 */
+            z-index: 1;
         }
-        .main-btn.show { 
-            opacity: 1; 
-            transform: translateY(0) scale(1); 
-            pointer-events: auto; 
-            z-index: 100; /* 顯示時提到最高層，不被訊息蓋住 */
+        /* 特別調整「收下驚喜」按鈕的位置 */
+        #nextLevelBtn {
+            position: absolute;
+            bottom: 22%; /* 往下一點 */
         }
+        .main-btn.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; z-index: 100; }
         .main-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255, 154, 158, 0.5); }
 
-        #progressHint { position: absolute; bottom: 15%; color: #bbb; font-size: 13px; letter-spacing: 1px; transition: opacity 0.5s; z-index: 50; }
+        #progressHint { position: absolute; bottom: 12%; color: #bbb; font-size: 13px; letter-spacing: 1px; transition: opacity 0.5s; z-index: 50; }
 
         /* === Stage 2: 禮物盒 === */
         #stage-box { overflow: visible; }
         .box-container { position: relative; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; perspective: 1000px; cursor: pointer;}
-        .box-emoji { 
-            font-size: 120px; 
-            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.1));
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 5;
-        }
+        .box-emoji { font-size: 120px; filter: drop-shadow(0 15px 30px rgba(0,0,0,0.1)); transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 5; }
         .shockwave { position: absolute; border: 3px solid var(--primary-color); border-radius: 50%; width: 100px; height: 100px; pointer-events: none; opacity: 0; z-index: 1; }
         @keyframes shock { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3); opacity: 0; } }
         .debris { position: absolute; pointer-events: none; font-size: 20px; z-index: 10; }
@@ -123,81 +143,22 @@
         #progressBarContainer { width: 220px; height: 12px; background: #eee; border-radius: 10px; margin-top: 50px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
         #progressBar { width: 0%; height: 100%; background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
-        /* === Stage 3: 華麗揭曉 (精緻化) === */
+        /* === Stage 3: 華麗揭曉 === */
         #stage-reveal { background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,236,240,1) 100%); }
-        
-        .sunburst-container {
-            position: absolute; width: 600px; height: 600px;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1; pointer-events: none;
-        }
-        .sunburst {
-            position: absolute; width: 100%; height: 100%;
-            background: repeating-conic-gradient(from 0deg, transparent 0deg 15deg, rgba(255, 215, 0, 0.1) 15deg 30deg);
-            animation: rotateSunburst 20s linear infinite;
-            mask-image: radial-gradient(circle, black 30%, transparent 70%);
-        }
+        .sunburst-container { position: absolute; width: 600px; height: 600px; display: flex; justify-content: center; align-items: center; z-index: 1; pointer-events: none; }
+        .sunburst { position: absolute; width: 100%; height: 100%; background: repeating-conic-gradient(from 0deg, transparent 0deg 15deg, rgba(255, 215, 0, 0.1) 15deg 30deg); animation: rotateSunburst 20s linear infinite; mask-image: radial-gradient(circle, black 30%, transparent 70%); }
         @keyframes rotateSunburst { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        .prize-card {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 20px;
-            border: 4px double var(--gold);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1), inset 0 0 20px rgba(255, 215, 0, 0.1);
-            position: relative;
-            z-index: 5;
-            text-align: center;
-            max-width: 280px;
-            animation: prizePopIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        
-        @keyframes prizePopIn {
-            0% { transform: scale(0.5) translateY(50px) rotate(-5deg); opacity: 0; }
-            100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; }
-        }
-
-        .prize-badge {
-            background: var(--gold);
-            color: #856404;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 5px 15px;
-            border-radius: 20px;
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            white-space: nowrap;
-        }
-
-        .reveal-content { 
-            font-size: 28px; font-weight: 800; color: #444; margin: 10px 0; 
-            white-space: pre-wrap; line-height: 1.4;
-            background: linear-gradient(45deg, #d4af37, #444); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .prize-sparkle {
-            position: absolute; width: 10px; height: 10px; background: var(--gold);
-            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-            animation: sparkleAnim 1.5s infinite;
-        }
+        .prize-card { background: white; padding: 40px 30px; border-radius: 20px; border: 4px double var(--gold); box-shadow: 0 20px 50px rgba(0,0,0,0.1), inset 0 0 20px rgba(255, 215, 0, 0.1); position: relative; z-index: 5; text-align: center; max-width: 280px; animation: prizePopIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes prizePopIn { 0% { transform: scale(0.5) translateY(50px) rotate(-5deg); opacity: 0; } 100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; } }
+        .prize-badge { background: var(--gold); color: #856404; font-size: 12px; font-weight: bold; padding: 5px 15px; border-radius: 20px; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.1); white-space: nowrap; }
+        .reveal-content { font-size: 28px; font-weight: 800; color: #444; margin: 10px 0; white-space: pre-wrap; line-height: 1.4; background: linear-gradient(45deg, #d4af37, #444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .prize-sparkle { position: absolute; width: 10px; height: 10px; background: var(--gold); clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); animation: sparkleAnim 1.5s infinite; }
         @keyframes sparkleAnim { 0%, 100% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.5); opacity: 1; } }
 
         /* === Stage 4: 卡片 === */
-        .card-style {
-            background-color: var(--card-bg);
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            padding: 40px 30px; border-radius: 24px; text-align: center; max-width: 340px; width: 88%;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid #f0e6e6;
-            max-height: 85vh; overflow-y: auto;
-        }
+        .card-style { background-color: var(--card-bg); background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"); padding: 40px 30px; border-radius: 24px; text-align: center; max-width: 340px; width: 88%; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid #f0e6e6; max-height: 85vh; overflow-y: auto; }
         .message-text { color: #555; font-size: 15px; line-height: 1.8; font-family: "Noto Serif TC", serif; text-align: left;}
         .highlight { color: #d87a7a; font-weight: bold; border-bottom: 2px solid #fad0c4; }
-
         .confetti { position: absolute; width: 10px; height: 10px; z-index: 50; pointer-events: none; }
     </style>
 </head>
@@ -205,10 +166,25 @@
 
     <canvas id="canvas-trail"></canvas>
 
-    <!-- Stage 0 -->
+    <!-- 音樂控制 -->
+    <div id="music-control" title="切換音樂">
+        <span class="music-icon" id="music-status">🔈</span>
+    </div>
+    <!-- 音源：更換為較穩定的來源 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Stage 0: Lock Screen -->
     <div id="stage-lock" class="container active">
-        <h2 style="color:#555; letter-spacing: 2px; font-weight: normal;">可愛的小老師 Happy Birthday</h2>
-        <input type="text" id="passInput" placeholder="輸入密碼" maxlength="4" inputmode="numeric">
+        <div class="lock-card" id="lockCard">
+            <div class="lock-title">王亮晴's Birthday</div>
+            <div style="font-size: 45px; margin-bottom: 20px;">🔒</div>
+            <div class="pass-input-wrapper">
+                <input type="text" id="passInput" placeholder="請輸入日期" maxlength="4" inputmode="numeric">
+            </div>
+            <p style="color: #bbb; font-size: 13px; margin-top: 15px; letter-spacing: 1px;">輸入密碼解鎖驚喜</p>
+        </div>
     </div>
 
     <!-- Stage 1 -->
@@ -230,14 +206,12 @@
     <!-- Stage 3 Reveal -->
     <div id="stage-reveal" class="container">
         <div class="sunburst-container"><div class="sunburst"></div></div>
-        
         <div class="prize-card" id="prizeCard">
             <div class="prize-badge">✨ SPECIAL GIFT ✨</div>
             <div style="font-size: 16px; color: #888; margin-bottom: 10px;">恭喜獲得</div>
             <div id="finalPrizeText" class="reveal-content">...</div>
             <div style="font-size: 12px; color: #bbb; margin-top: 15px;">此券永久有效，隨時兌換</div>
         </div>
-
         <button id="goToCardBtn" class="main-btn show" style="margin-top: 40px;">💌 讀一封信</button>
     </div>
 
@@ -258,7 +232,6 @@
             passcode: "0107",
             spawnRate: 500, 
             behaviorAfterFinish: 'random', 
-
             floatingTexts: [
                 "王亮晴 生日快樂！", "願妳眼裡永遠有光", "今天的妳特別耀眼",
                 "要把煩惱都清空喔", "謝謝妳的存在", "在我心裡妳永遠是最棒的",
@@ -266,13 +239,11 @@
                 "不管發生什麼我都在", "要天天開心", "妳不是只有一個人",
                 "累了就抱抱自己", "我永遠站在妳這邊", "✨ Happy Birthday ✨"
             ],
-            
             prizes: [
                 "請喝一杯飲料券\n(口味任選)", "無條件聽妳抱怨券\n(隨時有效)",
                 "真心話券\n(可以問我任何東西喔)", "萬能許願券\n(妳說什麼就是什麼)",
                 "點心餵食券\n(隨機掉落零食)"
             ],
-            
             cardOpening: "Dear 可愛數學小老師：",
             cardBody: `這是我們相識後的第二個生日。回首這段日子，雖然我們曾一起走過一些雨天，也經歷過些許磕絆，但正是這些不完美，讓我更珍惜現在能以朋友身分陪在妳身邊的時刻。<br><br>
                        謝謝妳一直以來的包容與陪伴，妳的善良與知性是我生命中很特別的存在。過去的歲月感謝有妳參與，未來的日子，也請讓我們繼續並肩前行，互相指教。<br><br>
@@ -281,45 +252,81 @@
             cardSignature: "林博程 敬上"
         };
 
+        // 文字初始化
         document.getElementById('card-opening').innerText = APP_CONTENT.cardOpening;
         document.getElementById('card-body').innerHTML = APP_CONTENT.cardBody;
         document.getElementById('card-signature').innerText = APP_CONTENT.cardSignature;
 
+        const music = document.getElementById('bgMusic');
+        const musicBtn = document.getElementById('music-control');
+        const musicStatus = document.getElementById('music-status');
+
+        // 音訊檢查：確保連結可用才顯示按鈕
+        music.addEventListener('canplaythrough', () => {
+            musicBtn.classList.add('ready');
+        });
+
+        // 靜默處理加載錯誤
+        music.addEventListener('error', (e) => {
+            console.warn("Music source could not be loaded. App will continue without audio.");
+            musicBtn.style.display = 'none';
+        });
+
+        function toggleMusic() {
+            if (music.paused) {
+                music.play().then(() => {
+                    musicStatus.innerText = "🔊";
+                }).catch(err => console.log("Play rejected"));
+            } else {
+                music.pause();
+                musicStatus.innerText = "🔈";
+            }
+        }
+        musicBtn.onclick = toggleMusic;
+
+        // 滑鼠軌跡
         const canvas = document.getElementById('canvas-trail');
         const ctx = canvas.getContext('2d');
         let particles = [];
         const colors = ['#ff9a9e', '#fad0c4', '#fbc2eb', '#ffffff'];
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
-        
         const createParticle = (x, y) => {
-            particles.push({
-                x, y, text: '♥', color: colors[Math.floor(Math.random() * colors.length)],
-                size: Math.random() * 15 + 8, speedX: Math.random() * 2 - 1, speedY: Math.random() * 2 - 1, life: 1
-            });
+            particles.push({ x, y, text: '♥', color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 15 + 8, speedX: Math.random() * 2 - 1, speedY: Math.random() * 2 - 1, life: 1 });
         }
         window.addEventListener('mousemove', e => createParticle(e.clientX, e.clientY));
         window.addEventListener('touchmove', e => createParticle(e.touches[0].clientX, e.touches[0].clientY));
-        
         function animateTrail() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach((p, i) => {
-                p.x += p.speedX; p.y += p.speedY; p.life -= 0.03; p.size *= 0.95;
-                ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
-                ctx.font = `bold ${p.size}px sans-serif`;
-                ctx.fillText(p.text, p.x, p.y);
-            });
+            particles.forEach((p, i) => { p.x += p.speedX; p.y += p.speedY; p.life -= 0.03; p.size *= 0.95; ctx.fillStyle = p.color; ctx.globalAlpha = p.life; ctx.font = `bold ${p.size}px sans-serif`; ctx.fillText(p.text, p.x, p.y); });
             particles = particles.filter(p => p.life > 0);
             requestAnimationFrame(animateTrail);
         }
         animateTrail();
 
+        // 密碼驗證
         const passInput = document.getElementById('passInput');
+        const lockCard = document.getElementById('lockCard');
+
         passInput.addEventListener('input', (e) => {
-            if(e.target.value === APP_CONTENT.passcode) {
-                passInput.blur();
-                switchStage('stage-lock', 'stage-text');
-                startFloatingSequence();
+            if(e.target.value.length === 4) {
+                if(e.target.value === APP_CONTENT.passcode) {
+                    passInput.blur();
+                    // 嘗試播放音樂
+                    music.play().then(() => {
+                        musicStatus.innerText = "🔊";
+                        musicBtn.classList.add('ready');
+                    }).catch(e => console.log("Autoplay blocked by browser policy"));
+                    
+                    switchStage('stage-lock', 'stage-text');
+                    startFloatingSequence();
+                } else {
+                    lockCard.classList.add('error-shake');
+                    setTimeout(() => { 
+                        lockCard.classList.remove('error-shake'); 
+                        e.target.value = ""; 
+                    }, 400);
+                }
             }
         });
 
@@ -329,7 +336,6 @@
             const hint = document.getElementById('progressHint');
             let textCounter = 0;
             const totalTexts = APP_CONTENT.floatingTexts.length;
-
             const interval = setInterval(() => {
                 let textContent = "";
                 if (textCounter < totalTexts) textContent = APP_CONTENT.floatingTexts[textCounter];
@@ -338,34 +344,30 @@
                     else if (APP_CONTENT.behaviorAfterFinish === 'random') textContent = APP_CONTENT.floatingTexts[Math.floor(Math.random() * totalTexts)];
                     else textContent = APP_CONTENT.floatingTexts[textCounter % totalTexts];
                 }
-                
                 const el = document.createElement('div');
                 el.className = 'float-msg';
                 const rx = (textCounter % 2 === 0) ? (15 + Math.random() * 20) : (50 + Math.random() * 20);
-                const ry = 25 + (Math.random() * 45);
+                const ry = 25 + (Math.random() * 40); // 稍微往上一點，不蓋到按鈕
                 el.style.left = rx + '%'; el.style.top = ry + '%';
                 stageText.appendChild(el);
-                
                 let i = 0;
                 function type() { if (i < textContent.length) { el.innerHTML += textContent.charAt(i); i++; setTimeout(type, 45); } }
                 type();
                 textCounter++;
-
                 if (textCounter >= totalTexts) { nextBtn.classList.add('show'); hint.style.opacity = '0'; }
                 else { hint.innerText = `正在為妳收集驚喜中 (${textCounter}/${totalTexts})`; }
                 setTimeout(() => el.remove(), 6000);
             }, APP_CONTENT.spawnRate);
-
             nextBtn.onclick = () => { clearInterval(interval); switchStage('stage-text', 'stage-box'); };
         }
 
+        // 禮物盒邏輯
         let clickCount = 0;
         const maxClicks = 10;
         const boxContainer = document.getElementById('boxContainer');
         const box = document.getElementById('giftBox');
         const statusText = document.getElementById('boxStatus');
         const pBar = document.getElementById('progressBar');
-
         const statusMessages = ["加油！", "用力點！", "快開了！", "還差一點點！", "最後一下！", "就要出來了！"];
         const debrisShapes = ["✨", "💖", "⭐", "🎀", "🎈"];
 
@@ -374,40 +376,22 @@
             clickCount++;
             const progress = (clickCount / maxClicks) * 100;
             pBar.style.width = progress + '%';
-
             box.style.transform = `scale(${1 + clickCount * 0.08}) rotate(${clickCount % 2 === 0 ? 5 : -5}deg)`;
             if (clickCount % 2 === 0) statusText.innerText = statusMessages[Math.floor(Math.random() * statusMessages.length)];
-
-            const sw = document.createElement('div');
-            sw.className = 'shockwave';
-            sw.style.animation = 'shock 0.6s ease-out forwards';
-            boxContainer.appendChild(sw);
-            setTimeout(() => sw.remove(), 600);
-
+            const sw = document.createElement('div'); sw.className = 'shockwave'; sw.style.animation = 'shock 0.6s ease-out forwards'; boxContainer.appendChild(sw); setTimeout(() => sw.remove(), 600);
             for (let i = 0; i < 5; i++) {
-                const deb = document.createElement('div');
-                deb.className = 'debris';
-                deb.innerText = debrisShapes[Math.floor(Math.random() * debrisShapes.length)];
-                const tx = (Math.random() - 0.5) * 300;
-                const ty = (Math.random() - 0.5) * 300 - 50;
-                const tr = Math.random() * 360;
-                deb.style.setProperty('--tx', `${tx}px`);
-                deb.style.setProperty('--ty', `${ty}px`);
-                deb.style.setProperty('--tr', `${tr}deg`);
-                deb.style.animation = 'scatter 0.8s ease-out forwards';
-                boxContainer.appendChild(deb);
-                setTimeout(() => deb.remove(), 800);
+                const deb = document.createElement('div'); deb.className = 'debris'; deb.innerText = debrisShapes[Math.floor(Math.random() * debrisShapes.length)];
+                const tx = (Math.random() - 0.5) * 300; const ty = (Math.random() - 0.5) * 300 - 50; const tr = Math.random() * 360;
+                deb.style.setProperty('--tx', `${tx}px`); deb.style.setProperty('--ty', `${ty}px`); deb.style.setProperty('--tr', `${tr}deg`); deb.style.animation = 'scatter 0.8s ease-out forwards';
+                boxContainer.appendChild(deb); setTimeout(() => deb.remove(), 800);
             }
-
             if (clickCount >= maxClicks) {
-                statusText.innerText = "開啦！🎉";
-                box.classList.add('shake-heavy');
+                statusText.innerText = "開啦！🎉"; box.classList.add('shake-heavy');
                 setTimeout(() => {
                     const prize = APP_CONTENT.prizes[Math.floor(Math.random() * APP_CONTENT.prizes.length)];
                     document.getElementById('finalPrizeText').innerText = prize;
                     switchStage('stage-box', 'stage-reveal');
-                    addRevealSparkles();
-                    startConfetti();
+                    addRevealSparkles(); startConfetti();
                 }, 1000);
             }
         };
@@ -415,36 +399,23 @@
         function addRevealSparkles() {
             const container = document.getElementById('stage-reveal');
             for(let i=0; i<15; i++) {
-                const s = document.createElement('div');
-                s.className = 'prize-sparkle';
-                s.style.left = Math.random() * 100 + '%';
-                s.style.top = Math.random() * 100 + '%';
-                s.style.animationDelay = Math.random() * 2 + 's';
-                container.appendChild(s);
+                const s = document.createElement('div'); s.className = 'prize-sparkle'; s.style.left = Math.random() * 100 + '%'; s.style.top = Math.random() * 100 + '%'; s.style.animationDelay = Math.random() * 2 + 's'; container.appendChild(s);
             }
         }
 
         document.getElementById('goToCardBtn').onclick = () => switchStage('stage-reveal', 'stage-card');
 
-        function switchStage(hide, show) {
-            document.getElementById(hide).classList.remove('active');
-            setTimeout(() => document.getElementById(show).classList.add('active'), 600);
+        function switchStage(hide, show) { 
+            document.getElementById(hide).classList.remove('active'); 
+            setTimeout(() => document.getElementById(show).classList.add('active'), 600); 
         }
 
         function startConfetti() {
             for(let i=0; i<120; i++) {
-                let c = document.createElement('div'); c.className = 'confetti';
-                c.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
-                c.style.left = Math.random()*100 + 'vw'; c.style.top = '-10px';
-                c.style.width = Math.random()*12+6+'px';
-                c.style.height = c.style.width;
-                c.style.animation = `drop ${Math.random()*3+2}s forwards`;
-                document.body.appendChild(c);
+                let c = document.createElement('div'); c.className = 'confetti'; c.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)]; c.style.left = Math.random()*100 + 'vw'; c.style.top = '-10px'; c.style.width = Math.random()*12+6+'px'; c.style.height = c.style.width; c.style.animation = `drop ${Math.random()*3+2}s forwards`; document.body.appendChild(c);
             }
             if(!document.getElementById('confetti-style')) {
-                let s = document.createElement('style'); s.id = 'confetti-style';
-                s.innerHTML = `@keyframes drop { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }`;
-                document.head.appendChild(s);
+                let s = document.createElement('style'); s.id = 'confetti-style'; s.innerHTML = `@keyframes drop { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }`; document.head.appendChild(s);
             }
         }
     </script>
