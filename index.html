@@ -11,6 +11,8 @@
             --card-bg: #fffdf9;
             --text-color: #555;
             --heart-color: #ff4d6d;
+            --glow-color: rgba(255, 154, 158, 0.3);
+            --gold: #ffd700;
         }
 
         body {
@@ -49,60 +51,141 @@
 
         /* === Stage 1: 浪漫氛圍 === */
         .float-msg {
-            position: absolute; padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(5px);
-            border-radius: 16px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255, 236, 240, 0.8);
-            color: #444; font-size: 16px;
+            position: absolute; padding: 15px 30px;
+            background: linear-gradient(white, white) padding-box,
+                        linear-gradient(135deg, #ff9a9e 0%, #fbc2eb 100%) border-box;
+            border: 2px solid transparent;
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px var(--glow-color);
+            color: #444; font-size: 17px; font-weight: 500;
             font-family: "Palatino Linotype", serif; letter-spacing: 1px;
-            animation: driftUpText 6s ease-out forwards;
+            animation: driftUpText 6s ease-out forwards, pulseGlow 3s infinite ease-in-out;
             pointer-events: auto; z-index: 10;
-            min-width: 120px; text-align: center;
-        }
-        @keyframes driftUpText {
-            0% { transform: translateY(0) scale(0.9); opacity: 0; }
-            10% { opacity: 1; transform: translateY(-20px) scale(1); }
-            80% { opacity: 0.9; }
-            100% { transform: translateY(-300px) scale(0.95); opacity: 0; }
+            min-width: 140px; text-align: center;
         }
 
-        .pop-heart {
-            position: absolute; color: var(--heart-color); font-size: 24px;
-            animation: floatUpHeart 2.5s ease-in-out forwards;
-            z-index: 5; pointer-events: none;
+        .float-msg::after {
+            content: '✨';
+            position: absolute;
+            top: -10px; right: -10px;
+            font-size: 16px;
+            filter: drop-shadow(0 0 5px var(--primary-color));
         }
-        @keyframes floatUpHeart {
-            0% { transform: translateY(10px) scale(0.8); opacity: 0; }
-            20% { opacity: 0.8; }
-            100% { transform: translateY(-120px) scale(1.4); opacity: 0; }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 10px 25px var(--glow-color); }
+            50% { box-shadow: 0 15px 35px rgba(255, 154, 158, 0.5); }
+        }
+
+        @keyframes driftUpText {
+            0% { transform: translateY(0) scale(0.85); opacity: 0; }
+            15% { opacity: 1; transform: translateY(-30px) scale(1); }
+            85% { opacity: 1; }
+            100% { transform: translateY(-350px) scale(0.95); opacity: 0; }
         }
 
         .main-btn {
             margin-top: 30px; padding: 12px 35px;
             background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             color: white; border: none; border-radius: 50px; font-size: 16px; cursor: pointer;
-            transition: 0.3s; box-shadow: 0 8px 20px rgba(255, 154, 158, 0.3);
+            transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            box-shadow: 0 8px 20px rgba(255, 154, 158, 0.3);
+            opacity: 0; transform: translateY(30px) scale(0.8);
+            pointer-events: none;
+            z-index: 1; /* 初始較低 */
+        }
+        .main-btn.show { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+            pointer-events: auto; 
+            z-index: 100; /* 顯示時提到最高層，不被訊息蓋住 */
         }
         .main-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255, 154, 158, 0.5); }
-        #nextLevelBtn { margin-top: 280px; opacity: 0; z-index: 10; font-size: 18px; padding: 15px 45px;}
+
+        #progressHint { position: absolute; bottom: 15%; color: #bbb; font-size: 13px; letter-spacing: 1px; transition: opacity 0.5s; z-index: 50; }
 
         /* === Stage 2: 禮物盒 === */
-        .box-emoji { font-size: 120px; cursor: pointer; transition: transform 0.1s; }
-        .shake { animation: shake 0.5s; }
-        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
-        #progressBarContainer { width: 220px; height: 10px; background: #eee; border-radius: 5px; margin: 25px 0; overflow: hidden; }
-        #progressBar { width: 0%; height: 100%; background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); transition: width 0.1s; }
-
-        /* === Stage 3: 開獎 === */
-        .reveal-content { 
-            font-size: 32px; font-weight: 800; color: #444; margin: 20px 0; white-space: pre-wrap; line-height: 1.4;
-            background: linear-gradient(45deg, #ff9a9e, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            padding: 20px;
+        #stage-box { overflow: visible; }
+        .box-container { position: relative; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; perspective: 1000px; cursor: pointer;}
+        .box-emoji { 
+            font-size: 120px; 
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.1));
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 5;
         }
-        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1.1); opacity: 1; } }
+        .shockwave { position: absolute; border: 3px solid var(--primary-color); border-radius: 50%; width: 100px; height: 100px; pointer-events: none; opacity: 0; z-index: 1; }
+        @keyframes shock { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3); opacity: 0; } }
+        .debris { position: absolute; pointer-events: none; font-size: 20px; z-index: 10; }
+        @keyframes scatter { 0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) rotate(var(--tr)) scale(0); opacity: 0; } }
+        .shake-heavy { animation: shakeHeavy 0.4s infinite; }
+        @keyframes shakeHeavy { 0% { transform: translate(0, 0) rotate(0deg); } 20% { transform: translate(-5px, 5px) rotate(-3deg); } 40% { transform: translate(5px, -5px) rotate(3deg); } 60% { transform: translate(-5px, -5px) rotate(-3deg); } 80% { transform: translate(5px, 5px) rotate(3deg); } 100% { transform: translate(0, 0) rotate(0deg); } }
+        #progressBarContainer { width: 220px; height: 12px; background: #eee; border-radius: 10px; margin-top: 50px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        #progressBar { width: 0%; height: 100%; background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        /* === Stage 3: 華麗揭曉 (精緻化) === */
+        #stage-reveal { background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,236,240,1) 100%); }
+        
+        .sunburst-container {
+            position: absolute; width: 600px; height: 600px;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1; pointer-events: none;
+        }
+        .sunburst {
+            position: absolute; width: 100%; height: 100%;
+            background: repeating-conic-gradient(from 0deg, transparent 0deg 15deg, rgba(255, 215, 0, 0.1) 15deg 30deg);
+            animation: rotateSunburst 20s linear infinite;
+            mask-image: radial-gradient(circle, black 30%, transparent 70%);
+        }
+        @keyframes rotateSunburst { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .prize-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            border: 4px double var(--gold);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1), inset 0 0 20px rgba(255, 215, 0, 0.1);
+            position: relative;
+            z-index: 5;
+            text-align: center;
+            max-width: 280px;
+            animation: prizePopIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        
+        @keyframes prizePopIn {
+            0% { transform: scale(0.5) translateY(50px) rotate(-5deg); opacity: 0; }
+            100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; }
+        }
+
+        .prize-badge {
+            background: var(--gold);
+            color: #856404;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 20px;
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            white-space: nowrap;
+        }
+
+        .reveal-content { 
+            font-size: 28px; font-weight: 800; color: #444; margin: 10px 0; 
+            white-space: pre-wrap; line-height: 1.4;
+            background: linear-gradient(45deg, #d4af37, #444); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .prize-sparkle {
+            position: absolute; width: 10px; height: 10px; background: var(--gold);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: sparkleAnim 1.5s infinite;
+        }
+        @keyframes sparkleAnim { 0%, 100% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.5); opacity: 1; } }
 
         /* === Stage 4: 卡片 === */
         .card-style {
@@ -115,7 +198,6 @@
         .message-text { color: #555; font-size: 15px; line-height: 1.8; font-family: "Noto Serif TC", serif; text-align: left;}
         .highlight { color: #d87a7a; font-weight: bold; border-bottom: 2px solid #fad0c4; }
 
-        /* Confetti */
         .confetti { position: absolute; width: 10px; height: 10px; z-index: 50; pointer-events: none; }
     </style>
 </head>
@@ -125,27 +207,38 @@
 
     <!-- Stage 0 -->
     <div id="stage-lock" class="container active">
-        <h2 style="color:#555; letter-spacing: 2px; font-weight: normal;">0107 Birthday</h2>
+        <h2 style="color:#555; letter-spacing: 2px; font-weight: normal;">可愛的小老師 Happy Birthday</h2>
         <input type="text" id="passInput" placeholder="輸入密碼" maxlength="4" inputmode="numeric">
     </div>
 
     <!-- Stage 1 -->
     <div id="stage-text" class="container">
+        <div id="progressHint">正在為妳收集驚喜中...</div>
         <button id="nextLevelBtn" class="main-btn">✨ 收下驚喜</button>
     </div>
 
     <!-- Stage 2 -->
     <div id="stage-box" class="container">
-        <div style="color:#777; margin-bottom:25px; font-size: 18px;">連續點擊打開它！</div>
-        <div class="box-emoji" id="giftBox">🎁</div>
+        <div id="boxStatus" style="color:#f8a3a8; font-weight: bold; margin-bottom: 15px; font-size: 20px; height: 24px;">用力點它！</div>
+        <div class="box-container" id="boxContainer">
+            <div class="box-emoji" id="giftBox">🎁</div>
+        </div>
         <div id="progressBarContainer"><div id="progressBar"></div></div>
+        <div style="margin-top: 15px; color: #aaa; font-size: 12px;">點擊打開這份禮物</div>
     </div>
 
-    <!-- Stage 3 -->
+    <!-- Stage 3 Reveal -->
     <div id="stage-reveal" class="container">
-        <div style="font-size: 18px; color: #888; letter-spacing: 2px;">✨ CONGRATS ✨</div>
-        <div id="finalPrizeText" class="reveal-content">...</div>
-        <button id="goToCardBtn" class="main-btn">💌 讀一封信</button>
+        <div class="sunburst-container"><div class="sunburst"></div></div>
+        
+        <div class="prize-card" id="prizeCard">
+            <div class="prize-badge">✨ SPECIAL GIFT ✨</div>
+            <div style="font-size: 16px; color: #888; margin-bottom: 10px;">恭喜獲得</div>
+            <div id="finalPrizeText" class="reveal-content">...</div>
+            <div style="font-size: 12px; color: #bbb; margin-top: 15px;">此券永久有效，隨時兌換</div>
+        </div>
+
+        <button id="goToCardBtn" class="main-btn show" style="margin-top: 40px;">💌 讀一封信</button>
     </div>
 
     <!-- Stage 4 -->
@@ -154,43 +247,32 @@
             <div id="card-title" style="font-size: 13px; color: var(--primary-color); letter-spacing: 4px; font-weight: bold; margin-bottom: 25px;">MEMORIES & WISHES</div>
             <div class="message-text">
                 <span id="card-opening" style="font-size: 18px; font-weight: bold; display:block; margin-bottom: 15px; color: #333;"></span>
-                <div id="card-body">
-                    <!-- 這裡會填入卡片正文 -->
-                </div>
+                <div id="card-body"></div>
             </div>
-            <div id="card-signature" style="font-size: 14px; color: #888; margin-top: 30px; text-align: right; font-weight: bold;">
-            </div>
+            <div id="card-signature" style="font-size: 14px; color: #888; margin-top: 30px; text-align: right; font-weight: bold;"></div>
         </div>
     </div>
 
     <script>
-        /**
-         * ==========================================
-         * ✨ 所有的文字內容都在這裡設定 ✨
-         * ==========================================
-         */
         const APP_CONTENT = {
             passcode: "0107",
+            spawnRate: 500, 
+            behaviorAfterFinish: 'random', 
 
             floatingTexts: [
-                "0107 生日快樂！", 
-                "願妳眼裡永遠有光", 
-                "今天的妳特別耀眼",
-                "要把煩惱都清空喔", 
-                "謝謝妳的存在",
-                "要天天開心",
-                "✨ Happy Birthday ✨"
+                "王亮晴 生日快樂！", "願妳眼裡永遠有光", "今天的妳特別耀眼",
+                "要把煩惱都清空喔", "謝謝妳的存在", "在我心裡妳永遠是最棒的",
+                "想哭的時候，記得有我", "妳是這世界上最獨一無二的", "這是屬於妳的一天",
+                "不管發生什麼我都在", "要天天開心", "妳不是只有一個人",
+                "累了就抱抱自己", "我永遠站在妳這邊", "✨ Happy Birthday ✨"
             ],
             
             prizes: [
-                "請喝一杯飲料券\n(口味任選)", 
-                "無條件聽妳抱怨券\n(隨時有效)",
-                "心情好轉券\n(負責逗妳笑)", 
-                "萬能許願券\n(妳說什麼就是什麼)",
+                "請喝一杯飲料券\n(口味任選)", "無條件聽妳抱怨券\n(隨時有效)",
+                "真心話券\n(可以問我任何東西喔)", "萬能許願券\n(妳說什麼就是什麼)",
                 "點心餵食券\n(隨機掉落零食)"
             ],
             
-            // --- 這是您的信件內容 ---
             cardOpening: "Dear 可愛數學小老師：",
             cardBody: `這是我們相識後的第二個生日。回首這段日子，雖然我們曾一起走過一些雨天，也經歷過些許磕絆，但正是這些不完美，讓我更珍惜現在能以朋友身分陪在妳身邊的時刻。<br><br>
                        謝謝妳一直以來的包容與陪伴，妳的善良與知性是我生命中很特別的存在。過去的歲月感謝有妳參與，未來的日子，也請讓我們繼續並肩前行，互相指教。<br><br>
@@ -199,9 +281,6 @@
             cardSignature: "林博程 敬上"
         };
 
-        /**
-         * 程式執行邏輯
-         */
         document.getElementById('card-opening').innerText = APP_CONTENT.cardOpening;
         document.getElementById('card-body').innerHTML = APP_CONTENT.cardBody;
         document.getElementById('card-signature').innerText = APP_CONTENT.cardSignature;
@@ -246,44 +325,104 @@
 
         function startFloatingSequence() {
             const stageText = document.getElementById('stage-text');
+            const nextBtn = document.getElementById('nextLevelBtn');
+            const hint = document.getElementById('progressHint');
+            let textCounter = 0;
+            const totalTexts = APP_CONTENT.floatingTexts.length;
+
             const interval = setInterval(() => {
-                const textContent = APP_CONTENT.floatingTexts[Math.floor(Math.random() * APP_CONTENT.floatingTexts.length)];
+                let textContent = "";
+                if (textCounter < totalTexts) textContent = APP_CONTENT.floatingTexts[textCounter];
+                else {
+                    if (APP_CONTENT.behaviorAfterFinish === 'stop') { clearInterval(interval); return; }
+                    else if (APP_CONTENT.behaviorAfterFinish === 'random') textContent = APP_CONTENT.floatingTexts[Math.floor(Math.random() * totalTexts)];
+                    else textContent = APP_CONTENT.floatingTexts[textCounter % totalTexts];
+                }
+                
                 const el = document.createElement('div');
                 el.className = 'float-msg';
-                const rx = Math.random() * 70 + 15; const ry = Math.random() * 40 + 45;
+                const rx = (textCounter % 2 === 0) ? (15 + Math.random() * 20) : (50 + Math.random() * 20);
+                const ry = 25 + (Math.random() * 45);
                 el.style.left = rx + '%'; el.style.top = ry + '%';
                 stageText.appendChild(el);
                 
                 let i = 0;
-                function type() {
-                    if (i < textContent.length) { el.innerHTML += textContent.charAt(i); i++; setTimeout(type, 40); }
-                }
+                function type() { if (i < textContent.length) { el.innerHTML += textContent.charAt(i); i++; setTimeout(type, 45); } }
                 type();
-                setTimeout(() => el.remove(), 6000);
-            }, 600);
+                textCounter++;
 
-            setTimeout(() => {
-                const btn = document.getElementById('nextLevelBtn'); btn.style.opacity = 1;
-                btn.onclick = () => { clearInterval(interval); switchStage('stage-text', 'stage-box'); };
-            }, 4000);
+                if (textCounter >= totalTexts) { nextBtn.classList.add('show'); hint.style.opacity = '0'; }
+                else { hint.innerText = `正在為妳收集驚喜中 (${textCounter}/${totalTexts})`; }
+                setTimeout(() => el.remove(), 6000);
+            }, APP_CONTENT.spawnRate);
+
+            nextBtn.onclick = () => { clearInterval(interval); switchStage('stage-text', 'stage-box'); };
         }
 
         let clickCount = 0;
+        const maxClicks = 10;
+        const boxContainer = document.getElementById('boxContainer');
         const box = document.getElementById('giftBox');
-        box.onclick = () => {
+        const statusText = document.getElementById('boxStatus');
+        const pBar = document.getElementById('progressBar');
+
+        const statusMessages = ["加油！", "用力點！", "快開了！", "還差一點點！", "最後一下！", "就要出來了！"];
+        const debrisShapes = ["✨", "💖", "⭐", "🎀", "🎈"];
+
+        boxContainer.onclick = () => {
+            if (clickCount >= maxClicks) return;
             clickCount++;
-            document.getElementById('progressBar').style.width = (clickCount/10)*100 + '%';
-            box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
-            box.style.transform = `scale(${1 + clickCount*0.05})`;
-            if(clickCount >= 10) {
+            const progress = (clickCount / maxClicks) * 100;
+            pBar.style.width = progress + '%';
+
+            box.style.transform = `scale(${1 + clickCount * 0.08}) rotate(${clickCount % 2 === 0 ? 5 : -5}deg)`;
+            if (clickCount % 2 === 0) statusText.innerText = statusMessages[Math.floor(Math.random() * statusMessages.length)];
+
+            const sw = document.createElement('div');
+            sw.className = 'shockwave';
+            sw.style.animation = 'shock 0.6s ease-out forwards';
+            boxContainer.appendChild(sw);
+            setTimeout(() => sw.remove(), 600);
+
+            for (let i = 0; i < 5; i++) {
+                const deb = document.createElement('div');
+                deb.className = 'debris';
+                deb.innerText = debrisShapes[Math.floor(Math.random() * debrisShapes.length)];
+                const tx = (Math.random() - 0.5) * 300;
+                const ty = (Math.random() - 0.5) * 300 - 50;
+                const tr = Math.random() * 360;
+                deb.style.setProperty('--tx', `${tx}px`);
+                deb.style.setProperty('--ty', `${ty}px`);
+                deb.style.setProperty('--tr', `${tr}deg`);
+                deb.style.animation = 'scatter 0.8s ease-out forwards';
+                boxContainer.appendChild(deb);
+                setTimeout(() => deb.remove(), 800);
+            }
+
+            if (clickCount >= maxClicks) {
+                statusText.innerText = "開啦！🎉";
+                box.classList.add('shake-heavy');
                 setTimeout(() => {
                     const prize = APP_CONTENT.prizes[Math.floor(Math.random() * APP_CONTENT.prizes.length)];
                     document.getElementById('finalPrizeText').innerText = prize;
                     switchStage('stage-box', 'stage-reveal');
+                    addRevealSparkles();
                     startConfetti();
-                }, 500);
+                }, 1000);
             }
         };
+
+        function addRevealSparkles() {
+            const container = document.getElementById('stage-reveal');
+            for(let i=0; i<15; i++) {
+                const s = document.createElement('div');
+                s.className = 'prize-sparkle';
+                s.style.left = Math.random() * 100 + '%';
+                s.style.top = Math.random() * 100 + '%';
+                s.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(s);
+            }
+        }
 
         document.getElementById('goToCardBtn').onclick = () => switchStage('stage-reveal', 'stage-card');
 
@@ -293,16 +432,20 @@
         }
 
         function startConfetti() {
-            for(let i=0; i<80; i++) {
+            for(let i=0; i<120; i++) {
                 let c = document.createElement('div'); c.className = 'confetti';
                 c.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
                 c.style.left = Math.random()*100 + 'vw'; c.style.top = '-10px';
+                c.style.width = Math.random()*12+6+'px';
+                c.style.height = c.style.width;
                 c.style.animation = `drop ${Math.random()*3+2}s forwards`;
                 document.body.appendChild(c);
             }
-            let s = document.createElement('style');
-            s.innerHTML = `@keyframes drop { to { transform: translateY(105vh) rotate(360deg); opacity: 0; } }`;
-            document.head.appendChild(s);
+            if(!document.getElementById('confetti-style')) {
+                let s = document.createElement('style'); s.id = 'confetti-style';
+                s.innerHTML = `@keyframes drop { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }`;
+                document.head.appendChild(s);
+            }
         }
     </script>
 </body>
