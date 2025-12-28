@@ -13,6 +13,8 @@
             --heart-color: #ff4d6d;
             --glow-color: rgba(255, 154, 158, 0.3);
             --gold: #ffd700;
+            /* 漂浮速度預設值 */
+            --drift-duration: 6s;
         }
 
         body {
@@ -43,9 +45,6 @@
         }
         @keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
         .lock-icon { font-size: 45px; margin-bottom: 10px; display: block; }
-        .lock-title { color: #555; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-        .lock-subtitle { color: #999; font-size: 13px; margin-bottom: 25px; }
-
         .digit-container { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; }
         .digit-box {
             width: 45px; height: 55px; border-bottom: 3px solid #eee;
@@ -54,12 +53,13 @@
         }
         .digit-box.active { border-bottom-color: var(--primary-color); }
         .digit-box.active::after {
-            content: ''; position: absolute; bottom: 12px; left: 50%; width: 2px; height: 25px; background: var(--primary-color);
+            content: ''; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+            width: 2px; height: 25px; background: var(--primary-color);
             animation: blink 1s infinite;
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .digit-box.filled { border-bottom-color: var(--primary-color); }
-        #hiddenPassInput { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 1; }
+        #hiddenPassInput { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 1; font-size: 16px; }
         .error-shake { animation: shakeError 0.4s ease-in-out; }
         @keyframes shakeError { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
 
@@ -70,7 +70,7 @@
             background: linear-gradient(white, white) padding-box, linear-gradient(135deg, #ff9a9e 0%, #fbc2eb 100%) border-box;
             border: 2px solid transparent; backdrop-filter: blur(8px); border-radius: 20px;
             box-shadow: 0 10px 25px var(--glow-color); color: #444; font-size: 16px;
-            animation: driftUpText 6s ease-out forwards; z-index: 10; text-align: center;
+            animation: driftUpText var(--drift-duration) ease-out forwards; z-index: 10; text-align: center;
         }
         .float-msg::after { content: '✨'; position: absolute; top: -10px; right: -10px; font-size: 14px; filter: drop-shadow(0 0 5px var(--primary-color)); }
         @keyframes driftUpText { 0% { transform: translateY(0) scale(0.85); opacity: 0; } 15% { opacity: 1; transform: translateY(-30px) scale(1); } 100% { transform: translateY(-350px) scale(0.9); opacity: 0; } }
@@ -79,8 +79,7 @@
             padding: 14px 40px; background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             color: white; border: none; border-radius: 50px; font-size: 16px; cursor: pointer;
             transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            box-shadow: 0 8px 20px rgba(255, 154, 158, 0.3);
-            display: none; opacity: 0; transform: translateY(30px) scale(0.8);
+            box-shadow: 0 8px 20px rgba(255, 154, 158, 0.3); display: none; opacity: 0; transform: translateY(30px) scale(0.8);
             z-index: 100; pointer-events: auto;
         }
         .main-btn.show { display: block; opacity: 1; transform: translateY(0) scale(1); }
@@ -105,12 +104,12 @@
 
         /* === Stage 4: 讀信 (愛心噴泉) === */
         .card-style { 
-            background-color: var(--card-bg); padding: 40px 30px; border-radius: 30px; text-align: left; max-width: 340px; width: 88%; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1); border: 1px solid #f0e6e6; max-height: 80vh; overflow-y: auto; position: relative; z-index: 50; 
+            background-color: var(--card-bg); padding: 45px 35px; border-radius: 30px; text-align: left; max-width: 340px; width: 88%; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1); border: 1px solid #f0e6e6; max-height: 85vh; overflow-y: auto; position: relative; z-index: 50; 
         }
-        .message-text { color: #555; font-size: 16px; line-height: 2.3; font-family: "Noto Serif TC", serif; }
+        .message-text { color: #444; font-size: 16px; line-height: 2.2; font-family: "Microsoft JhengHei", sans-serif; }
         .highlight { color: #ff6b6b; font-weight: bold; border-bottom: 2px solid #fad0c4; }
-        .floating-heart { position: absolute; color: rgba(255, 107, 107, 0.75); pointer-events: none; z-index: 40; animation: heartRise var(--d) linear forwards; }
+        .floating-heart { position: absolute; color: rgba(255, 107, 107, 0.7); pointer-events: none; z-index: 40; animation: heartRise var(--d) linear forwards; }
         @keyframes heartRise { 0% { transform: translateY(110vh) scale(0.5) rotate(0deg); opacity: 0; } 20% { opacity: 0.9; } 100% { transform: translateY(-20vh) scale(2.2) rotate(360deg); opacity: 0; } }
     </style>
 </head>
@@ -167,13 +166,26 @@
                 <span style="font-size: 19px; font-weight: bold; display:block; margin-bottom: 15px; color: #333;">Dear 可愛數學小老師：</span>
                 <div id="card-body"></div>
             </div>
-            <div style="font-size: 14px; color: #888; margin-top: 30px; text-align: right; font-weight: bold;">林博程 敬上</div>
+            <div style="font-size: 14px; color: #888; margin-top: 35px; text-align: right; font-weight: bold;">林博程 敬上</div>
         </div>
     </div>
 
     <script>
-        const APP_CONTENT = {
-            passcode: "0107",
+        /**
+         * ==========================================
+         * 🛠️ 生日驚喜後台控制系統 🛠️
+         * ==========================================
+         */
+        const CONFIG = {
+            passcode: "0107",             // 解鎖密碼
+            typingSpeed: 45,              // 文字打字速度 (毫秒)
+            spawnRate: 1000,              // 文字飛出頻率 (毫秒)
+            driftDuration: "6s",          // 文字在螢幕漂浮的時間
+            
+            // 💡 數量門檻：出現幾句祝福後，跳出「收下驚喜」按鈕？
+            requiredTextCount: 13, 
+
+            // 祝福語清單
             floatingTexts: [
                 "王亮晴 生日快樂！", "願妳眼裡永遠有光", "今天的妳特別耀眼",
                 "要把煩惱都清空喔", "謝謝妳的存在", "妳在我心裡是最棒的",
@@ -181,10 +193,28 @@
                 "不管發生什麼我都在", "要天天開心", "妳不是只有一個人",
                 "累了就抱抱自己", "我永遠站在妳這邊", "✨ Happy Birthday ✨"
             ],
-            prizes: ["請喝一杯飲料券 (口味任選)", "無條件聽妳抱怨券 (隨時有效)", "真心話券 (可以問我任何東西)", "萬能許願券 (妳說什麼就是什麼)", "點心餵食券 (隨機掉落零食)"],
-            cardBody: `這是我們相識後的第二個生日。回望這段繾綣時光，那些一起撐傘走過的雨天，與偶爾泛起漣漪的磕絆，如今都綻放成此刻最溫潤的養分。<br><br>正因為曾目睹過彼此的不完美，我才愈發珍惜能以朋友的身分，在妳身旁安靜守候的每個瞬間。謝謝妳一直以來的寬容與溫柔，妳的善良與知性，始終是我生命中一道最特別的風景。<br><br>未來的旅程，願我們能繼續並肩而行，互相支撐。對我而言——<br><br><span class="highlight">能遇見妳，就是我這份人生考卷裡最幸運的答案。</span><br><br>祝妳 生日快樂，願妳的每一天都充滿盈盈笑意。`
+            
+            prizes: [
+                "請喝一杯飲料券 (口味任選)", "無條件聽妳抱怨券 (隨時有效)", 
+                "真心話券 (可以問我任何東西)", "萬能許願券 (妳說什麼就是什麼)", 
+                "點心餵食券 (隨機掉落零食)"
+            ],
+            
+            // 💡 客製化感人信件內容
+            cardBodyText: `沒想到轉眼間，這竟然是我們認識後，陪妳度過的第二個生日了。<br><br>
+                       回頭看這段日子，我們中間雖然有過一些不愉快，但現在想起來，那些磨合都不重要了，反而讓我們更了解彼此。真的很謝謝妳一直以來的包容和幫助。<br><br>
+                       對我來說—— <br>
+                       <span class="highlight">「能遇見妳，就是我這份人生考卷裡，最幸運的答案。不管發生什麼事，只要妳回頭，我就會在。 ❤️」</span><br><br>
+                       祝妳 生日快樂！希望妳未來的每一天，都能開開心心的！`
         };
 
+        document.documentElement.style.setProperty('--drift-duration', CONFIG.driftDuration);
+
+        /**
+         * ==========================================
+         * ⚙️ 程式執行引擎
+         * ==========================================
+         */
         const hiddenInput = document.getElementById('hiddenPassInput');
         const digitBoxes = [document.getElementById('box-0'), document.getElementById('box-1'), document.getElementById('box-2'), document.getElementById('box-3')];
         
@@ -192,9 +222,8 @@
             e.target.value = e.target.value.replace(/[^0-9]/g, '');
             const val = e.target.value;
             digitBoxes.forEach((box, i) => { box.innerText = val[i] || ""; box.classList.remove('filled', 'active'); if (val[i]) box.classList.add('filled'); if (i === val.length) box.classList.add('active'); });
-            
             if(val.length === 4) {
-                if(val === APP_CONTENT.passcode) {
+                if(val === CONFIG.passcode) {
                     hiddenInput.blur();
                     switchStage('stage-lock', 'stage-text');
                     startFloatingSequence();
@@ -209,23 +238,35 @@
         function startFloatingSequence() {
             const stageText = document.getElementById('stage-text'), nextBtn = document.getElementById('nextLevelBtn'), hint = document.getElementById('progressHint');
             let textCounter = 0;
-            const total = APP_CONTENT.floatingTexts.length;
+            const total = CONFIG.floatingTexts.length;
 
             textInterval = setInterval(() => {
-                if (textCounter >= total) return;
-                const textContent = APP_CONTENT.floatingTexts[textCounter];
+                if (textCounter < total) {
+                    const content = CONFIG.floatingTexts[textCounter];
+                    spawnFloatingMsg(content);
+                    textCounter++;
+                    hint.innerText = `正在為妳收集驚喜中 (${textCounter}/${total})`;
+                    
+                    if (textCounter === CONFIG.requiredTextCount) {
+                        setTimeout(() => { nextBtn.classList.add('show'); hint.style.opacity = '0'; }, 1000);
+                    }
+                } else {
+                    // 超過總數後隨機飛出
+                    const content = CONFIG.floatingTexts[Math.floor(Math.random()*total)];
+                    spawnFloatingMsg(content);
+                }
+            }, CONFIG.spawnRate);
+
+            function spawnFloatingMsg(textContent) {
                 const el = document.createElement('div');
                 el.className = 'float-msg';
                 el.style.left = (15 + Math.random()*60) + '%'; el.style.top = (25 + Math.random()*35) + '%';
                 stageText.appendChild(el);
                 let i = 0;
-                function type() { if (i < textContent.length) { el.innerHTML += textContent.charAt(i); i++; setTimeout(type, 50); } }
+                function type() { if (i < textContent.length) { el.innerHTML += textContent.charAt(i); i++; setTimeout(type, CONFIG.typingSpeed); } }
                 type();
-                textCounter++;
-                hint.innerText = `正在為妳收集驚喜中 (${textCounter}/${total})`;
-                if (textCounter === total) { setTimeout(() => { nextBtn.classList.add('show'); hint.style.opacity = '0'; }, 1500); }
-                setTimeout(() => el.remove(), 6000);
-            }, 1200);
+                setTimeout(() => el.remove(), parseInt(CONFIG.driftDuration) * 1000 + 500);
+            }
 
             nextBtn.onclick = () => { 
                 clearInterval(textInterval); 
@@ -242,19 +283,22 @@
             clickCount++;
             document.getElementById('progressBar').style.width = (clickCount * 10) + '%';
             box.style.transform = `scale(${1 + clickCount*0.08}) rotate(${clickCount%2?5:-5}deg)`;
-            const sw = document.createElement('div'); sw.className = 'shockwave'; sw.style.animation = 'shockAnim 0.6s ease-out forwards'; boxContainer.appendChild(sw);
+            const sw = document.createElement('div');
+            sw.className = 'shockwave';
+            sw.style.animation = 'shockAnim 0.6s ease-out forwards';
+            boxContainer.appendChild(sw);
             setTimeout(() => sw.remove(), 600);
             if (clickCount >= 10) {
                 document.getElementById('boxStatus').innerText = "開啦！🎉";
                 setTimeout(() => {
-                    document.getElementById('finalPrizeText').innerText = APP_CONTENT.prizes[Math.floor(Math.random()*APP_CONTENT.prizes.length)];
+                    document.getElementById('finalPrizeText').innerText = CONFIG.prizes[Math.floor(Math.random()*CONFIG.prizes.length)];
                     switchStage('stage-box', 'stage-reveal');
                 }, 1000);
             }
         };
 
         document.getElementById('goToCardBtn').onclick = () => {
-            document.getElementById('card-body').innerHTML = APP_CONTENT.cardBody;
+            document.getElementById('card-body').innerHTML = CONFIG.cardBodyText;
             switchStage('stage-reveal', 'stage-card');
             setInterval(() => {
                 const h = document.createElement('div'); h.className = 'floating-heart'; h.innerHTML = ['❤', '💖', '💕', '💗', '💌'][Math.floor(Math.random()*5)];
@@ -266,19 +310,17 @@
 
         function switchStage(hide, show) { document.getElementById(hide).classList.remove('active'); setTimeout(() => document.getElementById(show).classList.add('active'), 600); }
 
-        // === 最終完美鼠標特效 (FPS穩定+零殘留) ===
+        // === 鼠標特效引擎 (FPS穩定+零殘留) ===
         const canvas = document.getElementById('canvas-trail'), ctx = canvas.getContext('2d');
         let particles = [];
         window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
         window.onresize();
 
-        const handleMove = (x, y) => {
+        window.addEventListener('mousemove', (e) => {
             for(let i=0; i<2; i++) {
-                particles.push({ x: x, y: y, s: Math.random() * 6 + 3, o: 1, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2 });
+                particles.push({ x: e.clientX, y: e.clientY, s: Math.random() * 6 + 3, o: 1, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2 });
             }
-        };
-        window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
-        window.addEventListener('touchmove', (e) => handleMove(e.touches[0].clientX, e.touches[0].clientY));
+        });
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
